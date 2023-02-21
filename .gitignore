@@ -8,6 +8,8 @@ RuntimeMeshComponent/Intermediate/*
 Content/LocalTest/*
 Content/LocalTests/*
 
+Source/ZEDSamples/Internal/*
+
 #local folders
 *.vs
 *.db
