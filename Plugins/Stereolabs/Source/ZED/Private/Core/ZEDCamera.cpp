@@ -507,12 +507,10 @@ void AZEDCamera::Tick(float DeltaSeconds)
 				//ZedRightEyeMaterialInstanceDynamic->SetTextureParameterValue("Normals", RightEyeNormals->Texture);
 			}
 		}
-#if WITH_EDITOR
 		else
 		{
 			ZED_CAMERA_LOG_E("Resizing depth and normal without depth enabled in runtime parameters");
 		}
-#endif
 
 		// Depth retrieve toggle
 		if (bCurrentDepthEnabled != RuntimeParameters.bEnableDepth)
@@ -586,7 +584,6 @@ void AZEDCamera::GrabCallback(ESlErrorCode ErrorCode, const FSlTimestamp& Timest
 		CurrentFrameTrackingData.TrackingState = (ESlTrackingState)TrackingState;
 		CurrentFrameTrackingData.Timestamp = Timestamp;
 
-#if WITH_EDITOR
 		if (TrackingState == SL_POSITIONAL_TRACKING_STATE_FPS_TOO_LOW)
 		{
 			ZED_CAMERA_LOG_W("FPS too low for good tracking.");
@@ -595,7 +592,6 @@ void AZEDCamera::GrabCallback(ESlErrorCode ErrorCode, const FSlTimestamp& Timest
 		{
 			ZED_CAMERA_LOG_W("Tracking trying to relocate.");
 		}
-#endif
 
 		// Get the IMU rotation
 		if (TrackingState == SL_POSITIONAL_TRACKING_STATE_OK ||
@@ -613,12 +609,10 @@ void AZEDCamera::GrabCallback(ESlErrorCode ErrorCode, const FSlTimestamp& Timest
 			{
 				CurrentFrameTrackingData.IMURotator = sl::unreal::ToUnrealType(imuPose).Rotator();
 			}
-		#if WITH_EDITOR
 			else
 			{
 				ZED_CAMERA_LOG_E("Error while getting IMU data : \"%i\"", ErrorCode);
 			}
-		#endif
 
 		}
 	SL_SCOPE_UNLOCK
@@ -694,6 +688,12 @@ void AZEDCamera::SetObjectDetectionRuntimeParameters(const FSlObjectDetectionRun
 	GSlCameraProxy->SetObjectDetectionRuntimeParameters(ObjectDetectionRuntimeParameters);
 }
 
+void AZEDCamera::SetBodyTrackingRuntimeParameters(const FSlBodyTrackingRuntimeParameters& NewValue)
+{
+	BodyTrackingRuntimeParameters = NewValue;
+	GSlCameraProxy->SetBodyTrackingRuntimeParameters(BodyTrackingRuntimeParameters);
+}
+
 void AZEDCamera::SetCameraSettings(const FSlVideoSettings& NewValue)
 {
 	if (NewValue.bDefault)
@@ -726,14 +726,28 @@ void AZEDCamera::EnableObjectDetection()
 {
 	GSlCameraProxy->EnableObjectDetection(ObjectDetectionParameters);
 
-	GSlCameraProxy->EnableAIThread(true);
+	GSlCameraProxy->EnableObjectDetectionThread(true);
 }
 
 void AZEDCamera::DisableObjectDetection()
 {
 	if (GSlCameraProxy->IsObjectDetectionEnabled()) GSlCameraProxy->DisableObjectDetection();
 
-	GSlCameraProxy->EnableAIThread(false);
+	GSlCameraProxy->EnableObjectDetectionThread(false);
+}
+
+void AZEDCamera::EnableBodyTracking()
+{
+	GSlCameraProxy->EnableBodyTracking(BodyTrackingParameters);
+
+	GSlCameraProxy->EnableBodyTrackingThread(true);
+}
+
+void AZEDCamera::DisableBodyTracking()
+{
+	if (GSlCameraProxy->IsBodyTrackingEnabled()) GSlCameraProxy->DisableBodyTracking();
+
+	GSlCameraProxy->EnableBodyTrackingThread(false);
 }
 
 void AZEDCamera::DisableTracking()
@@ -778,6 +792,9 @@ void AZEDCamera::InitializeParameters(AZEDInitializer* ZedInitializer, bool bHMD
 
 	ObjectDetectionParameters = ZedInitializer->ObjectDetectionParameters;
 	ObjectDetectionRuntimeParameters = ZedInitializer->ObjectDetectionRuntimeParameters;
+
+	BodyTrackingParameters = ZedInitializer->BodyTrackingParameters;
+	BodyTrackingRuntimeParameters = ZedInitializer->BodyTrackingRuntimeParameters;
 
 	DepthClampThreshold = ZedInitializer->DepthClampThreshold;
 

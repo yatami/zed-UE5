@@ -666,7 +666,6 @@ bool UZEDFunctionLibrary::HitTestReal(AZEDPlayerController* PlayerController, co
 bool UZEDFunctionLibrary::MultipleHitTestsReal(AZEDPlayerController* PlayerController, const TArray<FVector>& Locations, const TArray<float>& HitThresholds, bool bGetNormal, bool bHitIfBehind, TArray<FZEDHitResult>& HitResults)
 {
 	bool bOneThreshold = HitThresholds.Num() == 1;
-#if WITH_EDITOR
 	if (HitThresholds.Num() != 1 && HitThresholds.Num() != Locations.Num())
 	{
 		SL_LOG_W(ZEDFunctionLibrary, "Thresholds size differ from Locations size : %d - %d", HitThresholds.Num(), Locations.Num());
@@ -675,7 +674,6 @@ bool UZEDFunctionLibrary::MultipleHitTestsReal(AZEDPlayerController* PlayerContr
 
 		bOneThreshold = true;
 	}
-#endif
 
 	float ThresholdTemp = HitThresholds[0];
 	uint32 LocationsNum = Locations.Num();
@@ -749,7 +747,6 @@ bool UZEDFunctionLibrary::MultipleHitTestsReal(AZEDPlayerController* PlayerContr
 bool UZEDFunctionLibrary::MultipleHitTestsRealOneResult(AZEDPlayerController* PlayerController, const TArray<FVector>& Locations, const TArray<float>& HitThresholds, bool bGetNormal, bool bHitIfBehind, FZEDHitResult& HitResult)
 {
 	bool bOneThreshold = HitThresholds.Num() == 1;
-#if WITH_EDITOR
 	if (HitThresholds.Num() != 1 && HitThresholds.Num() != Locations.Num())
 	{
 		SL_LOG_W(ZEDFunctionLibrary, "Thresholds size differ from Locations size : %d - %d", HitThresholds.Num(), Locations.Num());
@@ -758,7 +755,6 @@ bool UZEDFunctionLibrary::MultipleHitTestsRealOneResult(AZEDPlayerController* Pl
 
 		bOneThreshold = true;
 	}
-#endif
 
 	uint32 LocationsNum = Locations.Num();
 	float ThresholdTemp = HitThresholds[0];
@@ -868,7 +864,7 @@ bool UZEDFunctionLibrary::CreateMeshFromFloorHit(AZEDPlayerController* PlayerCon
 	FIntPoint ImagePosition = PlayerController->ViewportHelper.ConvertScreenSpaceToImageSpace(ScreenPosition);
 	SL_PlaneData* planeData = sl_find_plane_at_hit(CameraID, sl::unreal::ToSlType(ImagePosition), true);
 
-	ESlErrorCode ErrorCode = (ESlErrorCode)planeData->error_code;
+	ESlErrorCode ErrorCode = sl::unreal::ToUnrealType((SL_ERROR_CODE)planeData->error_code);
 	if (ErrorCode != ESlErrorCode::EC_Success) {
 		UE_LOG(LogTemp, Warning, TEXT("Plane not found"));
 		return false;
@@ -880,7 +876,7 @@ bool UZEDFunctionLibrary::CreateMeshFromFloorHit(AZEDPlayerController* PlayerCon
 	PlaneMeshTriangles.SetNum(65000);
 	int NbVertices, NbTriangles = 0;
 
-	ErrorCode = (ESlErrorCode)sl_convert_hitplane_to_mesh(CameraID, PlaneMeshVertices.GetData(), PlaneMeshTriangles.GetData(), &NbVertices, &NbTriangles);
+	ErrorCode = sl::unreal::ToUnrealType((SL_ERROR_CODE)sl_convert_hitplane_to_mesh(CameraID, PlaneMeshVertices.GetData(), PlaneMeshTriangles.GetData(), &NbVertices, &NbTriangles));
 	if (ErrorCode != ESlErrorCode::EC_Success) {
 		UE_LOG(LogTemp, Warning, TEXT("Cannont convert plane to mesh"));
 		return false;
@@ -919,7 +915,7 @@ bool UZEDFunctionLibrary::CreateMeshFromFloorPlane(FSlMeshData& MeshData) {
 
 	SL_PlaneData* planeData = sl_find_floor_plane(CameraID, &reset_quaternion, &reset_translation, prior_rotation, prior_translation);
 
-	ESlErrorCode ErrorCode = (ESlErrorCode)planeData->error_code;
+	ESlErrorCode ErrorCode = sl::unreal::ToUnrealType((SL_ERROR_CODE)planeData->error_code);
 	if (ErrorCode != ESlErrorCode::EC_Success) {
 		UE_LOG(LogTemp, Warning, TEXT("Plane not found"));
 		return false;
@@ -931,7 +927,7 @@ bool UZEDFunctionLibrary::CreateMeshFromFloorPlane(FSlMeshData& MeshData) {
 	PlaneMeshTriangles.SetNum(65000);
 	int NbVertices, NbTriangles = 0;
 
-	ErrorCode = (ESlErrorCode)sl_convert_floorplane_to_mesh(CameraID, PlaneMeshVertices.GetData(), PlaneMeshTriangles.GetData(), &NbVertices, &NbTriangles);
+	ErrorCode = sl::unreal::ToUnrealType((SL_ERROR_CODE)sl_convert_floorplane_to_mesh(CameraID, PlaneMeshVertices.GetData(), PlaneMeshTriangles.GetData(), &NbVertices, &NbTriangles));
 	if (ErrorCode != ESlErrorCode::EC_Success) {
 		UE_LOG(LogTemp, Warning, TEXT("Cannont convert plane to mesh"));
 		return false;
