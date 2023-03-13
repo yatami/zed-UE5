@@ -8,7 +8,7 @@
 
 
 #define IS_MICROSECONDS true
-#define GT_INVALID_VALUE -999
+#define GT_INVALID_VALUE -999.0
 #define BBOX_MINIMUM_VOLUME 0.005
 
 
@@ -665,7 +665,7 @@ struct FJsonMetaData
 
 public:
     UPROPERTY()
-    int64 SequenceID = 0;
+    FString SequenceID = "0";
 
     UPROPERTY()
     int32 ZEDSerialNumber = 0;
@@ -926,7 +926,7 @@ static FString SerializeJson(FJsonDataSet data)
     ////////////////////////////////////    
     
     TSharedPtr<FJsonObject> metadata = MakeShareable(new FJsonObject);
-    metadata->SetNumberField("SequenceID", data.Metadata.SequenceID);
+    metadata->SetStringField("SequenceID", data.Metadata.SequenceID);
     metadata->SetNumberField("ZEDSerialNumber", data.Metadata.ZEDSerialNumber);
     metadata->SetBoolField("IsRealZED", data.Metadata.IsRealZED);
     metadata->SetBoolField("IsRectified", data.Metadata.IsRectified);

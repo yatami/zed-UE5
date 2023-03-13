@@ -209,7 +209,7 @@ void USlTexture::UpdateTexture(const FSlMat& NewMat)
 
 void USlTexture::UpdateTexture(void* NewMat)
 {
-	if (!bCudaInteropEnabled)
+	if (!bCudaInteropEnabled) // dx12
 	{
 		sl_mat_update_cpu_from_gpu(NewMat);
 
@@ -223,7 +223,7 @@ void USlTexture::UpdateTexture(void* NewMat)
 		FTexture2DResource* resource = (FTexture2DResource*)Texture->Resource;
 		RHIUpdateTexture2D(resource->GetTexture2DRHI(), 0, region, region.Width * ByteSize, (uint8*)MatPtr);
 	}
-	else
+	else // dx11
 	{
 #if WITH_EDITOR
 		CHECK_UPDATE_VALID();
@@ -254,7 +254,6 @@ bool USlTexture::Resize(int32 NewWidth, int32 NewHeight)
 		SL_LOG_E(SlTexture, "Trying to resize texture with size <= 0: %d - %d.", NewWidth, NewHeight);
 		return false;
 	}
-
 
 	Width = NewWidth;
 	Height = NewHeight;

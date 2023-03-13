@@ -275,8 +275,11 @@ void FAnimNode_ZEDPose::BuildPoseFromSlBodyData(FPoseContext& PoseContext)
 
                         BoneScale = *ZEDBoneSize.Find(TargetBoneName) / *RefPoseBoneSize.Find(TargetBoneName);
                         ParentBoneScale = *ZEDBoneSize.Find(TargetParentBoneName) / *RefPoseBoneSize.Find(TargetParentBoneName);
+                        BoneScale /= ParentBoneScale;
 
                         FinalScale = BoneScaleAlpha * (*BonesScale.Find(TargetBoneName)) + (1 - BoneScaleAlpha) * FVector(1, 1, BoneScale);
+
+                        UE_LOG(LogTemp, Warning, TEXT("%s  : %f  : %f"), *TargetBoneName.ToString(), BoneScale, ParentBoneScale);
                     }
                     else
                     {

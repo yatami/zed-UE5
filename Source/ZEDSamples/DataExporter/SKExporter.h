@@ -64,4 +64,6 @@ private:
 	bool is_init_ = false;
 
 	float __fx, __fy, __cx, __cy = 0;
+
+	int current_frame = -1;
 };

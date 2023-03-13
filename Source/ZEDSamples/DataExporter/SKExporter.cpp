@@ -111,7 +111,7 @@ void ASKExporter::Init()
         meta.Bbox3dMinimumVolume = BBOX_MINIMUM_VOLUME;
         meta.IsRealZED = false;
         meta.IsRectified = true;
-        meta.SequenceID = sequence_id;
+        meta.SequenceID = FString::FromInt(sequence_id);
 
 
         __fx = GSlCameraProxy->GetCameraInformation(res).CalibrationParameters.LeftCameraParameters.HFocal;
@@ -131,6 +131,11 @@ void ASKExporter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+    if (IsInit() && current_frame == GSlCameraProxy->GetSVONumberOfFrames() - 2)
+    {
+        Save();
+    }
+
     if (GSlIsGrabThreadIdInitialized) Init();
 }
 
@@ -140,6 +145,7 @@ void ASKExporter::PushNewFrame(int FrameCount, FSlTimestamp TS, TMap<int, USkele
 
     FJsonFrameData fdata;
 
+    current_frame = FrameCount;
     uint64 ts = IS_MICROSECONDS ? (TS.timestamp.data_ns / 1000) : TS.timestamp;
     fdata.EpochTimeStamp = ts;
 
@@ -165,7 +171,7 @@ void ASKExporter::PushNewFrame(int FrameCount, FSlTimestamp TS, TMap<int, USkele
     for (auto &it : Avatars)
     {
         FJsonSingleDetection singleDetection;
-        singleDetection.ObjectID = it.Key;
+        singleDetection.ObjectID = 1; //starts at 1
         singleDetection.ObjectType = 0;
 
         FJsonSkeletonData skeletonData34;
@@ -182,12 +188,8 @@ void ASKExporter::PushNewFrame(int FrameCount, FSlTimestamp TS, TMap<int, USkele
             }
 
             FVector keypoint;
-            if (idx == (int)BODY_PARTS_POSE_34::PELVIS) { // The PELIVS kp is not at the same position in the SDK and in UE. Create a Fake kp at the correct position.
-                keypoint = (it.Value->GetBoneLocation(targetBone_34[(int)BODY_PARTS_POSE_34::LEFT_HIP], EBoneSpaces::WorldSpace) + it.Value->GetBoneLocation(targetBone_34[(int)BODY_PARTS_POSE_34::RIGHT_HIP], EBoneSpaces::WorldSpace)) / 2;
-            }
-            else {
-                keypoint = it.Value->GetBoneLocation(targetBone_34[idx], EBoneSpaces::WorldSpace);
-            }
+
+            keypoint = it.Value->GetBoneLocation(targetBone_34[idx], EBoneSpaces::WorldSpace);
 
             // if the joint does not exist on the model, ignore it
             if (keypoint == FVector::ZeroVector)
@@ -261,8 +263,7 @@ void ASKExporter::Save()
         WriteString(std::string(TCHAR_TO_UTF8(*SerializeJson(data))));
 
         CloseFile();
-        UE_LOG(LogTemp, Warning,TEXT("Recording: Stopped"));
+        UE_LOG(LogTemp, Warning, TEXT("Data saved to: %s"), *JSONFilename);
     }
 
-    UE_LOG(LogTemp, Warning,TEXT("Data saved to: %s"), *JSONFilename);
 }
