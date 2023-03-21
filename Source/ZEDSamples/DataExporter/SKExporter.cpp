@@ -201,7 +201,8 @@ void ASKExporter::PushNewFrame(int FrameCount, FSlTimestamp TS, TMap<int, USkele
                 skeletonData34.Keypoints3D_34.Add(convertFromUUToUnityCoordinateSystem(worldToCam(CameraPose.Transform, keypoint)));
             }
 
-            FVector2D keypoint_2d = projectPoint_(convertFromUUToImageCoordinateSystem(worldToCam(CameraPose.Transform, keypoint)), __fx, __fy, __cx, __cy);
+            //FVector2D keypoint_2d = projectPoint_(convertFromUUToImageCoordinateSystem(worldToCam(CameraPose.Transform, keypoint)), __fx, __fy, __cx, __cy);
+            FVector2D keypoint_2d = checkVisible(data.Metadata.ImageWidth, data.Metadata.ImageHeight, projectPoint_(convertFromUUToImageCoordinateSystem(worldToCam(CameraPose.Transform, keypoint)), __fx, __fy, __cx, __cy));
             if (keypoint_2d.ContainsNaN())
             {
                 keypoint_2d = FVector2D(GT_INVALID_VALUE, GT_INVALID_VALUE);
@@ -233,7 +234,8 @@ void ASKExporter::PushNewFrame(int FrameCount, FSlTimestamp TS, TMap<int, USkele
                 skeletonData18.Keypoints3D.Add(convertFromUUToUnityCoordinateSystem(worldToCam(CameraPose.Transform, keypoint)));
             }
 
-            FVector2D keypoint_2d = projectPoint_(convertFromUUToImageCoordinateSystem(worldToCam(CameraPose.Transform, keypoint)), __fx, __fy, __cx, __cy);
+            //FVector2D keypoint_2d = projectPoint_(convertFromUUToImageCoordinateSystem(worldToCam(CameraPose.Transform, keypoint)), __fx, __fy, __cx, __cy);
+            FVector2D keypoint_2d = checkVisible(data.Metadata.ImageWidth, data.Metadata.ImageHeight, projectPoint_(convertFromUUToImageCoordinateSystem(worldToCam(CameraPose.Transform, keypoint)), __fx, __fy, __cx, __cy));
             if (keypoint_2d.ContainsNaN())
             {
                 keypoint_2d = FVector2D(GT_INVALID_VALUE, GT_INVALID_VALUE);

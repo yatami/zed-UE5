@@ -7,7 +7,7 @@
 #include "UtilityStructs.generated.h"
 
 
-#define IS_MICROSECONDS true
+#define IS_MICROSECONDS false
 #define GT_INVALID_VALUE -999.0
 #define BBOX_MINIMUM_VOLUME 0.005
 
@@ -395,6 +395,16 @@ static FVector2D projectPoint_(FVector pt, float fx, float fy, float cx, float c
     pxl.Y = (pt.Y / pt.Z) * fy + cy;
 
     return pxl;
+}
+
+static inline FVector2D checkVisible(float width, float height, FVector2D point)
+{
+    if (point.X < width && point.Y < height && point.X > 0 && point.Y > 0) {
+        return point;
+    }
+    else {
+        return FVector2D(GT_INVALID_VALUE, GT_INVALID_VALUE);
+    }
 }
 
 static FVector convertFromImageToUnityCoordinateSystem(FVector in)
@@ -818,14 +828,26 @@ public:
     UPROPERTY()
     TArray<FVector2D> Keypoints2D;
 
+    //UPROPERTY()
+    //TArray<FVector2D> KeypointsConfidence2D;
+
     UPROPERTY()
     TArray<FVector2D> Keypoints2D_34;
+
+   // UPROPERTY()
+    //TArray<FVector2D> KeypointsConfidence2D_34;
 
     UPROPERTY()
     TArray<FVector> Keypoints3D;
 
+    //UPROPERTY()
+    //TArray<FVector> KeypointsConfidence3D;
+
     UPROPERTY()
     TArray<FVector> Keypoints3D_34;
+
+    //UPROPERTY()
+    //TArray<FVector> KeypointsConfidence3D_34;
 
     //UPROPERTY()
     //TArray<FVector> LocalPositionPerJoint;
