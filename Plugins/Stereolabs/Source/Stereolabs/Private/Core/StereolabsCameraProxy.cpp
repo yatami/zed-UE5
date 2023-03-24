@@ -766,7 +766,7 @@ void USlCameraProxy::Grab()
 			}
 		SL_SCOPE_UNLOCK
 
-		fps = sl_get_current_fps(CameraID);
+		fps += sl_get_current_fps(CameraID);
 		frame_count++;
 	}
 	else if (ErrorCode == SL_ERROR_CODE_END_OF_SVOFILE_REACHED)
