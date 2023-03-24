@@ -583,7 +583,7 @@ enum class ESlAIModels : uint8
 	AIM_HumanBody70AccurateDetection	UMETA(DisplayName = "Human body 70 accurate Detection"),
 	AIM_PersonHeadFastDetection			UMETA(DisplayName = "Person head fast Detection"),
 	AIM_PersonHeadAccurateDetection		UMETA(DisplayName = "Person head accurate Detection"),
-	AIM_REIDAssociation					UMETA(DisplayName = "REID Associaiton"),
+	AIM_REIDAssociation					UMETA(DisplayName = "REID Association"),
 	AIM_NeuralDepth						UMETA(DisplayName = "Neural Depth"),
 };
 

@@ -1430,6 +1430,13 @@ bool USlCameraProxy::EnableBodyTracking(const FSlBodyTrackingParameters& BTParam
 	return bBodyTrackingEnabled;
 }
 
+FSlBodyTrackingRuntimeParameters USlCameraProxy::GetBodyTrackingRuntimeParameters() {
+	FSlBodyTrackingRuntimeParameters fslrtp = FSlBodyTrackingRuntimeParameters();
+	fslrtp.DetectionConfidenceThreshold = BodyTrackingRuntimeParameters.detection_confidence_threshold;
+	fslrtp.MinimumKeypointsThreshold = BodyTrackingRuntimeParameters.minimum_keypoints_threshold;
+	return fslrtp;
+}
+
 bool USlCameraProxy::IsObjectDetectionEnabled()
 {
 	return bObjectDetectionEnabled;
@@ -1518,6 +1525,35 @@ int USlCameraProxy::GetNumberOfKeypoints()
 	{
 		return 38;
 	}
+}
+
+int USlCameraProxy::GetNumberOfBones()
+{
+	if (BodyTrackingParameters.BodyFormat == ESlBodyFormat::BF_BODY_18)
+	{
+		return 19;
+	}
+	else if (BodyTrackingParameters.BodyFormat == ESlBodyFormat::BF_BODY_34)
+	{
+		return 35;
+	}
+	else if (BodyTrackingParameters.BodyFormat == ESlBodyFormat::BF_BODY_38)
+	{
+		return 37;
+	}
+	else if (BodyTrackingParameters.BodyFormat == ESlBodyFormat::BF_BODY_70)
+	{
+		return 69;
+	}
+	else
+	{
+		return 37;
+	}
+}
+
+ESlBodyFormat USlCameraProxy::GetBodyFormat()
+{
+	return BodyTrackingParameters.BodyFormat;
 }
 
 void USlCameraProxy::SetHitTestDepthAndNormals(bool bEnableDepth, bool bEnableNormals)

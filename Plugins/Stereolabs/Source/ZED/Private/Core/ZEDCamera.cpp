@@ -694,6 +694,11 @@ void AZEDCamera::SetBodyTrackingRuntimeParameters(const FSlBodyTrackingRuntimePa
 	GSlCameraProxy->SetBodyTrackingRuntimeParameters(BodyTrackingRuntimeParameters);
 }
 
+FSlBodyTrackingRuntimeParameters AZEDCamera::GetBodyTrackingRuntimeParameters()
+{
+	return GSlCameraProxy->GetBodyTrackingRuntimeParameters();
+}
+
 void AZEDCamera::SetCameraSettings(const FSlVideoSettings& NewValue)
 {
 	if (NewValue.bDefault)

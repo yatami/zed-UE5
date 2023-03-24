@@ -471,6 +471,9 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (Keywords = "enable zed body tracking"), Category = "Zed|Body Tracking")
 	bool EnableBodyTracking(const FSlBodyTrackingParameters& BodyTrackingParameters);
 
+	UFUNCTION(BlueprintCallable, meta = (Keywords = "Get Body Tracking Parameters"), Category = "Zed|Body Tracking")
+	FSlBodyTrackingRuntimeParameters GetBodyTrackingRuntimeParameters();
+
 	/*
 	 * Tell if the Object detection module is enabled.
 	 * @return True is object detection is enabled
@@ -513,6 +516,17 @@ public:
 	*/
 	UFUNCTION(BlueprintPure, meta = (Keywords = "get number of keypoints"), Category = "Zed|Body Tracking")
 	int GetNumberOfKeypoints();
+
+	/*
+	* Get number of bones, lines between two keypoints for the skeleton display.
+	*/
+	UFUNCTION(BlueprintPure, meta = (Keywords = "get number of bones"), Category = "Zed|Body Tracking")
+	int GetNumberOfBones();
+
+	/*
+	*/
+	UFUNCTION(BlueprintPure, meta = (Keywords = "get current body format"), Category = "Zed|Body Tracking")
+	ESlBodyFormat GetBodyFormat();
 
 	/*
 	 * Call this function to get the current error of the open camera async task.
