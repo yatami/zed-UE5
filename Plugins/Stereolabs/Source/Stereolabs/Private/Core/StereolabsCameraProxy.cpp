@@ -166,6 +166,8 @@ USlCameraProxy::USlCameraProxy()
 	bAutoGainAndExposure(true),
 	CameraID(0)
 {
+	fps = 0;
+	frame_count = 0;
 }
 
 void USlCameraProxy::BeginDestroy()
@@ -763,9 +765,14 @@ void USlCameraProxy::Grab()
 				}
 			}
 		SL_SCOPE_UNLOCK
+
+		fps = sl_get_current_fps(CameraID);
+		frame_count++;
 	}
 	else if (ErrorCode == SL_ERROR_CODE_END_OF_SVOFILE_REACHED)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Mean FPS is : %f"), fps / frame_count);
+
 		if (bSVOLooping)
 		{
 			sl_set_svo_position(CameraID, 0);

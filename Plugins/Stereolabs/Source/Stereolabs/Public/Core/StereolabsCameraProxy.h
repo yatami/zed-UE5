@@ -1012,6 +1012,9 @@ private:
 
 	SL_INPUT_TYPE InputType;
 
+	float fps = 0;
+	int frame_count = 0;
+
 	/** Underlying sensors data (imu, ...)
 	* One for current ts, one for image ts.
 	*/

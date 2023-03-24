@@ -1656,7 +1656,8 @@ struct STEREOLABS_API FSlRuntimeParameters
 	FSlRuntimeParameters()
 		:
 		bEnableDepth(true),
-		ConfidenceThreshold(95),
+		bEnableFillMode(false),
+		ConfidenceThreshold(100),
 		TextureConfidenceThreshold(100),
 		ReferenceFrame(ESlReferenceFrame::RF_World),
 		bRemoveSaturatedAreas(true)
@@ -1671,6 +1672,12 @@ struct STEREOLABS_API FSlRuntimeParameters
 			bEnableDepth,
 			*Path
 			);
+		GConfig->GetBool(
+			Section,
+			TEXT("bEnableFillMode"),
+			bEnableFillMode,
+			*Path
+		);
 
 		GConfig->GetInt(
 			Section,
@@ -1712,6 +1719,13 @@ struct STEREOLABS_API FSlRuntimeParameters
 			*Path
 			);
 
+		GConfig->SetBool(
+			Section,
+			TEXT("bEnableFillMode"),
+			bEnableFillMode,
+			*Path
+		);
+
 		GConfig->SetInt(
 			Section,
 			TEXT("ConfidenceThreshold"),
@@ -1744,6 +1758,10 @@ struct STEREOLABS_API FSlRuntimeParameters
 	/** Enable depth (need to be true if tracking enabled) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bEnableDepth;
+
+	/** Defines if the depth map should be completed or not, similar to the removed SENSING_MODE::FILL */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bEnableFillMode;
 
 	/** Threshold to reject depth values based on their confidence. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

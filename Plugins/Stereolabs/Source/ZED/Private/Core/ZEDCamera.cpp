@@ -852,6 +852,7 @@ void AZEDCamera::Init(bool bHMDEnabled)
 	}
 	SetRuntimeParameters(RuntimeParameters);
 	SetObjectDetectionRuntimeParameters(ObjectDetectionRuntimeParameters);
+	SetBodyTrackingRuntimeParameters(BodyTrackingRuntimeParameters);
 	EnableMultiThreadedRenderingMode(true);
 
 	ZedLeftEyeMaterialInstanceDynamic = UMaterialInstanceDynamic::Create(ZedSourceMaterial, nullptr);
