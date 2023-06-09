@@ -7,8 +7,9 @@ public class ZEDSamples : ModuleRules
 	public ZEDSamples(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        bEnableUndefinedIdentifierWarnings = false;
 
-		PublicDependencyModuleNames.AddRange(new string[] {
+        PublicDependencyModuleNames.AddRange(new string[] {
 			"Core",
 			"CoreUObject",
 			"Engine",

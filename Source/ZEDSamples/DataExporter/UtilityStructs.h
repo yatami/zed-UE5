@@ -4,6 +4,21 @@
 #include "CoreMinimal.h"
 #include "Engine/World.h"
 
+
+#include <ctime>
+#include "cuda_runtime_api.h"
+
+#ifdef _WIN32 //using windows
+#include "Windows/AllowWindowsPlatformTypes.h"
+#include <windows.h>
+#include <winsock.h>
+#include <intrin.h>
+#include "TCHAR.h"
+#include "pdh.h"
+#pragma comment(lib, "Ws2_32.lib")
+#include "Windows/HideWindowsPlatformTypes.h"
+#endif
+
 #include "UtilityStructs.generated.h"
 
 
@@ -355,6 +370,9 @@ static FString enumToString(BODY_PARTS_POSE_18 joint)
     }
     return tostring;
 }
+
+
+
 
 static bool isInvalidValue(FVector in) {
     bool isInvalid = false;
@@ -1323,4 +1341,123 @@ static FString SerializeJson(FJsonDataSet data)
     FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
 
     return OutputString;
+}
+
+/*void getMetaData() {
+    int zed_major, zed_minor, zed_patch;
+    getZEDSDKBuildVersion(zed_major, zed_minor, zed_patch);
+
+    metadata["Software"]["TEST_VERSION"] = std::to_string(TEST_MAJOR_VERSION * 100 + TEST_MINOR_VERSION * 10 + TEST_PATCH_VERSION);
+    metadata["Software"]["TEST_BRANCH"] = GIT_BRANCH;
+    metadata["Software"]["TEST_COMMIT"] = GIT_COMMIT_HASH;
+    metadata["Software"]["SDK_VERSION"] = std::to_string(zed_major * 100 + zed_minor * 10 + zed_patch);
+    metadata["Software"]["SDK_BUILD"] = std::string(ZED_SDK_BUILD_ID);
+
+    // current date/time based on current system
+    time_t now = time(0);
+    std::string date(ctime(&now));
+    if (date.back() == '\n') date.pop_back(); // remove EOL
+    metadata["RUN_info"]["Date"] = date;
+    metadata["RUN_info"]["UNIX Time"] = now;
+    metadata["RUN_info"]["HOST"] = getHostName();
+    metadata["RUN_info"]["OS"] = getOS();
+    metadata["RUN_info"]["CPU"] = getCPU();
+    auto GPU_infos = getGPU();
+    metadata["RUN_info"]["GPU"] = GPU_infos.first;
+    metadata["RUN_info"]["CUDA"] = GPU_infos.second;
+}*/
+
+static std::string getCPU() {
+    std::string cpuName = "";
+#ifdef _WIN32
+    // Get extended ids.
+    int CPUInfo[4] = { -1 };
+    __cpuid(CPUInfo, 0x80000000);
+    unsigned int nExIds = CPUInfo[0];
+    // Get the information associated with each extended ID.
+    char CPUBrandString[0x40] = { 0 };
+    for (unsigned int i = 0x80000000; i <= nExIds; ++i) {
+        __cpuid(CPUInfo, i);
+        // Interpret CPU brand string and cache information.
+        if (i == 0x80000002) {
+            memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
+        }
+        else if (i == 0x80000003) {
+            memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
+        }
+        else if (i == 0x80000004) {
+            memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
+        }
+    }
+    std::string result(CPUBrandString);
+    while (result.back() == ' ') result.pop_back(); // remove white spaces
+    cpuName = result;
+#else
+    std::ifstream file("/proc/cpuinfo");
+    std::string line;
+    std::string result;
+    if (file.is_open()) {
+        while (file.good()) {
+            getline(file, line);
+            if (line.find("model name") != std::string::npos) {
+                bool delimPass = false;
+                bool lastSpace = false;
+                for (int i = 0; i < line.size(); i++) {
+                    if (delimPass) {
+                        if (!(lastSpace && line.at(i) == ' '))
+                            result += line.at(i);
+                        if (line.at(i) == ' ')
+                            lastSpace = true;
+                        else
+                            lastSpace = false;
+                    }
+                    if (!delimPass && line.at(i) == ':')
+                        delimPass = true;
+                }
+                break;
+            }
+        }
+    }
+    file.close();
+    cpuName = result;
+#endif
+    return cpuName;
+}
+
+static std::pair<std::string, int> getGPU() {
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, 0);
+    int cuda_v = 0;
+
+    cudaRuntimeGetVersion(&cuda_v);
+    int cuda_major = floor(cuda_v / 1000);
+    int cuda_minor = floor((cuda_v - (cuda_major * 1000)) / 10);
+    cuda_v = cuda_major * 10 + cuda_minor;
+
+    return std::make_pair(std::string(prop.name), cuda_v);
+}
+
+static std::string getOS() {
+    std::string osName = "";
+    osName = "Windows 10";
+    return osName;
+}
+
+static std::string getHostName() {
+    std::string hostName;
+#if _WIN32
+#define INFO_BUFFER_SIZE 32767
+    /*TCHAR infoBuf[INFO_BUFFER_SIZE];
+    DWORD bufCharCount = INFO_BUFFER_SIZE;
+    GetComputerName(infoBuf, &bufCharCount);*/
+
+    char name[1024] = "";
+    const int result = gethostname(name, sizeof name);
+    hostName = std::string(name);
+#else
+    char infoBuf[HOST_NAME_MAX];
+    gethostname(infoBuf, HOST_NAME_MAX);
+    hostName = std::string(infoBuf);
+#endif
+    return hostName;
 }
