@@ -6,7 +6,6 @@
 
 #include "Math/Matrix.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "HeadMountedDisplay.h"
 
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include <sl_mr_core/defines.hpp>
@@ -23,9 +22,6 @@ extern STEREOLABS_API uint32 GSlGrabThreadId;
 
 /** True if the grab thread has been initialized */
 extern STEREOLABS_API bool GSlIsGrabThreadIdInitialized;
-
-/** Eye half baseline of the Zed */
-extern STEREOLABS_API float GSlEyeHalfBaseline;
 
 /** Camera proxy instance */
 extern STEREOLABS_API class USlCameraProxy* GSlCameraProxy;
@@ -745,8 +741,6 @@ namespace sl
 					return sl::DEPTH_MODE::NONE;
 				case ESlDepthMode::DM_Performance:
 					return sl::DEPTH_MODE::PERFORMANCE;
-				//case ESlDepthMode::DM_NeuralFast:
-				//	return sl::DEPTH_MODE::NEURAL_FAST;
 				case ESlDepthMode::DM_Ultra:
 					return sl::DEPTH_MODE::ULTRA;
 				case ESlDepthMode::DM_Neural:
@@ -815,20 +809,20 @@ namespace sl
 		}
 
 		/*
-		 * Convert from ESlView to sl::VIEW
+		 * Convert from ESlView to SL_VIEW
 		 */
-		FORCEINLINE sl::VIEW ToSlType(ESlView UnrealType)
+		FORCEINLINE SL_VIEW ToSlType(ESlView UnrealType)
 		{
 			switch (UnrealType)
 			{
 				case ESlView::V_Left:
-					return  sl::VIEW::LEFT;
+					return  SL_VIEW_LEFT;
 				case ESlView::V_Right:
-					return sl::VIEW::RIGHT;
+					return SL_VIEW_RIGHT;
 				case ESlView::V_LeftUnrectified:
-					return sl::VIEW::LEFT_UNRECTIFIED;
+					return SL_VIEW_LEFT_UNRECTIFIED;
 				case ESlView::V_RightUnrectified:
-					return sl::VIEW::RIGHT_UNRECTIFIED;
+					return SL_VIEW_RIGHT_UNRECTIFIED;
 				// Not supported for the moment.
 				//case ESlView::V_LeftUnrectifiedGray:
 				//	return sl::VIEW::LEFT_UNRECTIFIED_GRAY;
@@ -839,22 +833,22 @@ namespace sl
 				//case ESlView::V_RightGray:
 				//	return sl::VIEW::RIGHT_GRAY;
 				case ESlView::V_SideBySide:
-					return sl::VIEW::SIDE_BY_SIDE;
+					return SL_VIEW_SIDE_BY_SIDE;
 				case ESlView::V_Depth:
-					return sl::VIEW::DEPTH;
+					return SL_VIEW_DEPTH;
 				case ESlView::V_DepthRight:
-					return sl::VIEW::DEPTH_RIGHT;
+					return SL_VIEW_DEPTH_RIGHT;
 				case ESlView::V_Confidence:
-					return sl::VIEW::CONFIDENCE;
+					return SL_VIEW_CONFIDENCE;
 				case ESlView::V_Normals:
-					return sl::VIEW::NORMALS;
+					return SL_VIEW_NORMALS;
 				case ESlView::V_NormalsRight:
-					return sl::VIEW::NORMALS_RIGHT;
+					return SL_VIEW_NORMALS_RIGHT;
 				default:
 				{
 					ensureMsgf(false, TEXT("Unhandled ESlView entry %u"), (uint32)UnrealType);
 
-					return (sl::VIEW)0;
+					return (SL_VIEW)0;
 				}
 			}
 		}

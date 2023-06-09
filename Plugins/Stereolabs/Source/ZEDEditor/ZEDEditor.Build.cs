@@ -10,6 +10,9 @@ namespace UnrealBuildTool.Rules
         {
             PrivatePCHHeaderFile = "Public/ZEDEditorPlugin.h";
 
+            bEnableUndefinedIdentifierWarnings = false;
+
+
             PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Public"));
             PrivateIncludePaths.Add(Path.Combine(ModuleDirectory, "Private"));
 
@@ -34,7 +37,6 @@ namespace UnrealBuildTool.Rules
                     "SlateCore",
                     "Engine",
                     "UnrealEd",
-                    "HeadMountedDisplay",
                     "DesktopPlatform",
                     "InputCore",
                     "AnimGraph",

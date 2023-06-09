@@ -21,6 +21,8 @@ public class Stereolabs : ModuleRules
     {
         PrivatePCHHeaderFile = "Public/Stereolabs.h";
 
+        bEnableUndefinedIdentifierWarnings = false;
+
         string CudaSDKPath = System.Environment.GetEnvironmentVariable("CUDA_PATH", EnvironmentVariableTarget.Machine);
         string ZEDSDKPath = System.Environment.GetEnvironmentVariable("ZED_SDK_ROOT_DIR", EnvironmentVariableTarget.Machine);
 
@@ -30,8 +32,7 @@ public class Stereolabs : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "MixedReality",
-                "HeadMountedDisplay"
+                "MixedReality"
 
 				// ... add other public dependencies that you statically link with here ...
 			}
@@ -134,7 +135,7 @@ public class Stereolabs : ModuleRules
             }
 
             // Set the paths to the SDK
-            string[] LibrariesNames = Directory.GetFiles(Path.Combine(DirPath, "lib"));
+            //string[] LibrariesNames = Directory.GetFiles(Path.Combine(DirPath, "lib"));
 
             PublicIncludePaths.Add(Path.Combine(DirPath, "include"));
             //PublicLibraryPaths.Add(Path.Combine(DirPath, "lib"));

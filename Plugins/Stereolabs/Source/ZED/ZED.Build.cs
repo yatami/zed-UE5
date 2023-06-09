@@ -24,6 +24,7 @@ public class ZED : ModuleRules
     public ZED(ReadOnlyTargetRules Target) : base(Target)
     {
         PrivatePCHHeaderFile = "Public/ZED.h";
+        bEnableUndefinedIdentifierWarnings = false;
 
         PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Public"));
         PrivateIncludePaths.Add(Path.Combine(ModuleDirectory, "Private"));
@@ -56,8 +57,6 @@ public class ZED : ModuleRules
 
                 "RenderCore",
                 "InputCore",
-
-                "HeadMountedDisplay",
 
                 "RHI", 
                 "RHICore",
