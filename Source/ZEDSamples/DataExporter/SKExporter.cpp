@@ -260,7 +260,7 @@ void ASKExporter::Save()
         UE_LOG(LogTemp, Warning, TEXT("File was not open"));
     }
     else {
-        WriteString(std::string(TCHAR_TO_UTF8(*SerializeJson(data))));
+        WriteString(std::string(TCHAR_TO_UTF8(*SerializeAccuracyJson(data))));
 
         CloseFile();
         UE_LOG(LogTemp, Warning, TEXT("Data saved to: %s"), *JSONFilename);

@@ -953,8 +953,7 @@ public:
     FJsonDataSet(){}
 };
 
-
-static FString SerializeJson(FJsonDataSet data)
+static FString SerializeAccuracyJson(FJsonDataSet data)
 {
     FString OutputString;
 
@@ -964,7 +963,7 @@ static FString SerializeJson(FJsonDataSet data)
     ////////////////////////////////////
     /// METADATA ///////////////////////
     ////////////////////////////////////    
-    
+
     TSharedPtr<FJsonObject> metadata = MakeShareable(new FJsonObject);
     metadata->SetStringField("SequenceID", data.Metadata.SequenceID);
     metadata->SetNumberField("ZEDSerialNumber", data.Metadata.ZEDSerialNumber);
@@ -1001,7 +1000,7 @@ static FString SerializeJson(FJsonDataSet data)
     //JsonObject->SetObjectField("InitialWorldPosition", InitialWorldPosition);
 
     TArray<TSharedPtr<FJsonValue>> Frames;
-    for(auto frame : data.Frames) {
+    for (auto frame : data.Frames) {
 
         TSharedPtr<FJsonObject> frameObj = MakeShareable(new FJsonObject);
         frameObj->SetStringField("ImageFileName", frame.ImageFileName);
@@ -1043,7 +1042,7 @@ static FString SerializeJson(FJsonDataSet data)
 
         TArray<TSharedPtr<FJsonValue>> ObjectDetections;
 
-        for (auto detection : frame.Detections.ObjectDetections) 
+        for (auto detection : frame.Detections.ObjectDetections)
         {
             TSharedPtr<FJsonObject> singleDetectionObj = MakeShareable(new FJsonObject);
 
@@ -1075,8 +1074,8 @@ static FString SerializeJson(FJsonDataSet data)
             ////////////////////////////////////
             /// 2D DATA ////// /////////////////
             ////////////////////////////////////
-            
-           TSharedPtr<FJsonObject> Bbox_2D = MakeShareable(new FJsonObject);
+
+            TSharedPtr<FJsonObject> Bbox_2D = MakeShareable(new FJsonObject);
             TArray<TSharedPtr<FJsonValue>> A;
             A.Add(MakeShareable(new FJsonValueNumber(detection.BoundingBox2D.A[0])));
             A.Add(MakeShareable(new FJsonValueNumber(detection.BoundingBox2D.A[1])));
@@ -1130,8 +1129,8 @@ static FString SerializeJson(FJsonDataSet data)
             ////////////////////////////////////
             /// BOUNDING BOX  //////////////////
             ////////////////////////////////////
-           
-          TSharedPtr<FJsonObject> Bbox_3D = MakeShareable(new FJsonObject);
+
+            TSharedPtr<FJsonObject> Bbox_3D = MakeShareable(new FJsonObject);
             A.Reset(3);
             A.Add(MakeShareable(new FJsonValueNumber(detection.BoundingBox3D_World.A[0])));
             A.Add(MakeShareable(new FJsonValueNumber(detection.BoundingBox3D_World.A[1])));
@@ -1248,7 +1247,7 @@ static FString SerializeJson(FJsonDataSet data)
             TSharedPtr<FJsonObject> LocalPositionPerJoint = MakeShareable(new FJsonObject);
             TSharedPtr<FJsonObject> LocalOrientationPerJoint = MakeShareable(new FJsonObject);
             for (int i = 0; i < detection.LocalPositionPerJoint.Num(); i++) {
-            
+
                 TArray<TSharedPtr<FJsonValue>> joint_position;
                 joint_position.Add(MakeShareable(new FJsonValueNumber(detection.LocalPositionPerJoint[i].X)));
                 joint_position.Add(MakeShareable(new FJsonValueNumber(detection.LocalPositionPerJoint[i].Y)));
@@ -1282,7 +1281,7 @@ static FString SerializeJson(FJsonDataSet data)
                 keypoints.Add(MakeShareable(new FJsonValueNumber(detection.Keypoints3D_34[i].Z)));
 
                 Keypoints3D_34->SetArrayField(enumToString((BODY_PARTS_POSE_34)i), keypoints);
-                
+
             }
 
             TSharedPtr<FJsonObject> Keypoints3D = MakeShareable(new FJsonObject);
@@ -1324,7 +1323,7 @@ static FString SerializeJson(FJsonDataSet data)
             singleDetectionObj->SetObjectField("Keypoints2D", Keypoints2D);
             singleDetectionObj->SetObjectField("Keypoints2D_34", Keypoints2D_34);
 
-            
+
             TSharedRef<FJsonValueObject> singleDetectionValue = MakeShareable(new FJsonValueObject(singleDetectionObj));
             ObjectDetections.Add(singleDetectionValue);
         }
@@ -1339,6 +1338,175 @@ static FString SerializeJson(FJsonDataSet data)
 
     TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
     FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
+
+    return OutputString;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+////////////////////// Perf Structs ///////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+
+USTRUCT()
+struct FPerfJsonMetaDataRunInfo
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY()
+    FString CpuModel;
+
+    UPROPERTY()
+    int CudaVersion;
+
+    UPROPERTY()
+    FString Data;
+
+    UPROPERTY()
+    FString GpuModel;
+
+    UPROPERTY()
+    FString HostName;
+
+    UPROPERTY()
+    FString OSVersion;
+};
+
+USTRUCT()
+struct FPerfJsonMetaDataSoftware
+{
+    GENERATED_BODY()
+
+public:
+
+    UPROPERTY()
+    FString SDKBuild;
+
+    UPROPERTY()
+    FString SDKVersion;
+};
+
+USTRUCT()
+struct FPerfJsonSequenceDepthParameters
+{
+    GENERATED_BODY()
+
+public:
+
+    UPROPERTY()
+    FString CoordinateSystem;
+
+    UPROPERTY()
+    FString CoordinateUnits;
+
+    UPROPERTY()
+    FString DepthMode;
+
+    UPROPERTY()
+    FString Measure3DReferenceFrame;
+};
+
+USTRUCT()
+struct FPerfJsonSequencePositionalTrackingParameters
+{
+    GENERATED_BODY()
+
+public:
+
+    UPROPERTY()
+    bool bEnableAreaMemory;
+
+    UPROPERTY()
+    bool bSetAsStatic;
+}
+
+USTRUCT()
+struct FPerfJsonMetaData
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY()
+    FPerfJsonMetaDataRunInfo RunInfo;
+
+    UPROPERTY()
+    FPerfJsonMetaDataSoftware SoftwareInfo;
+};
+
+USTRUCT()
+struct FPerfJsonSequenceZEDParameters
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY()
+    FSlBodyTrackingParameters BodyTrackingParameters;
+
+    UPROPERTY()
+    FSlBodyTrackingRuntimeParameters BodyTrackingRuntimeParameters;
+
+    UPROPERTY()
+    FPerfJsonSequenceDepthParameters DepthParameters;
+
+    UPROPERTY()
+    FPerfJsonSequencePositionalTrackingParameters PositionalTrackingParameters;
+};
+
+USTRUCT()
+struct FPerfJsonSequenceParameters
+{
+    GENERATED_BODY()
+
+public:
+
+    UPROPERTY()
+    FPerfJsonSequenceZEDParameters ZEDParameters;
+};
+
+USTRUCT()
+struct FPerfJsonSequencePerformanceResults
+{
+    GENERATED_BODY()
+
+public:
+};
+
+USTRUCT()
+struct FPerfJsonSequence
+{
+    GENERATED_BODY()
+
+public:
+
+    UPROPERTY()
+    bool IsFusion;
+
+    UPROPERTY()
+    FPerfJsonSequenceParameters Parameters;
+    UPROPERTY()
+    FPerfJsonSequencePerformanceResults PerformanceResults;
+};
+
+USTRUCT()
+struct FPerfJsonData
+{
+    GENERATED_BODY()
+
+public:
+
+    UPROPERTY()
+    FPerfJsonMetaData MetaData;
+
+    UPROPERTY()
+    TArray<FPerfJsonSequence> Sequences;
+
+    FPerfJsonData() {}
+};
+
+
+static FString SerializePerfJson(FPerfJsonData data)
+{
+    FString OutputString;
+
 
     return OutputString;
 }
