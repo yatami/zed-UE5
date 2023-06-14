@@ -19,12 +19,21 @@
 #include "Windows/HideWindowsPlatformTypes.h"
 #endif
 
+#include "Stereolabs/Public/Core/StereolabsBaseTypes.h"
+
 #include "UtilityStructs.generated.h"
 
 
 #define IS_MICROSECONDS false
 #define GT_INVALID_VALUE -999.0
-#define BBOX_MINIMUM_VOLUME 0.005
+#define BBOX_MINIMUM_VOLUME 0.05f
+
+template<typename T>
+static FString EnumToString(const FString& enumName, const T value)
+{
+    UEnum* pEnum = FindObject<UEnum>(ANY_PACKAGE, *enumName);
+    return *(pEnum ? pEnum->GetNameStringByIndex(static_cast<uint8>(value)) : "null");
+}
 
 
 enum class BODY_PARTS_POSE_34
@@ -1359,7 +1368,7 @@ public:
     int CudaVersion;
 
     UPROPERTY()
-    FString Data;
+    FString Date;
 
     UPROPERTY()
     FString GpuModel;
@@ -1371,19 +1380,6 @@ public:
     FString OSVersion;
 };
 
-USTRUCT()
-struct FPerfJsonMetaDataSoftware
-{
-    GENERATED_BODY()
-
-public:
-
-    UPROPERTY()
-    FString SDKBuild;
-
-    UPROPERTY()
-    FString SDKVersion;
-};
 
 USTRUCT()
 struct FPerfJsonSequenceDepthParameters
@@ -1393,16 +1389,7 @@ struct FPerfJsonSequenceDepthParameters
 public:
 
     UPROPERTY()
-    FString CoordinateSystem;
-
-    UPROPERTY()
-    FString CoordinateUnits;
-
-    UPROPERTY()
-    FString DepthMode;
-
-    UPROPERTY()
-    FString Measure3DReferenceFrame;
+    ESlDepthMode DepthMode;
 };
 
 USTRUCT()
@@ -1413,11 +1400,11 @@ struct FPerfJsonSequencePositionalTrackingParameters
 public:
 
     UPROPERTY()
-    bool bEnableAreaMemory;
+        bool bEnableAreaMemory = false;
 
     UPROPERTY()
-    bool bSetAsStatic;
-}
+        bool bSetAsStatic = true;
+};
 
 USTRUCT()
 struct FPerfJsonMetaData
@@ -1426,10 +1413,7 @@ struct FPerfJsonMetaData
 
 public:
     UPROPERTY()
-    FPerfJsonMetaDataRunInfo RunInfo;
-
-    UPROPERTY()
-    FPerfJsonMetaDataSoftware SoftwareInfo;
+        FPerfJsonMetaDataRunInfo RunInfo;
 };
 
 USTRUCT()
@@ -1463,11 +1447,31 @@ public:
 };
 
 USTRUCT()
+struct FPerfJsonSequencePerformanceResultsObjectDetectionRuntime
+{
+    GENERATED_BODY()
+
+public:
+
+    UPROPERTY()
+    float RetrieveTime_MS;
+
+    UPROPERTY()
+    float GrabTime_MS;
+
+    UPROPERTY()
+    float AppFPS;
+};
+
+USTRUCT()
 struct FPerfJsonSequencePerformanceResults
 {
     GENERATED_BODY()
 
 public:
+
+    UPROPERTY()
+    FPerfJsonSequencePerformanceResultsObjectDetectionRuntime ObjectDetectionRunTime;
 };
 
 USTRUCT()
@@ -1498,8 +1502,6 @@ public:
 
     UPROPERTY()
     TArray<FPerfJsonSequence> Sequences;
-
-    FPerfJsonData() {}
 };
 
 
@@ -1508,32 +1510,95 @@ static FString SerializePerfJson(FPerfJsonData data)
     FString OutputString;
 
 
+    // create a Json object and add a string field
+    TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+
+    ////////////////////////////////////
+    /// METADATA ///////////////////////
+    ////////////////////////////////////    
+
+    TSharedPtr<FJsonObject> metadata = MakeShareable(new FJsonObject);
+    TSharedPtr<FJsonObject> metadata_run_info = MakeShareable(new FJsonObject);
+    TSharedPtr<FJsonObject> metadata_software = MakeShareable(new FJsonObject);
+
+    metadata_run_info->SetStringField("CPU", data.MetaData.RunInfo.CpuModel);
+    metadata_run_info->SetNumberField("CUDA", data.MetaData.RunInfo.CudaVersion);
+    metadata_run_info->SetStringField("Date", data.MetaData.RunInfo.Date);
+    metadata_run_info->SetStringField("GPU", data.MetaData.RunInfo.GpuModel);
+    metadata_run_info->SetStringField("Host", data.MetaData.RunInfo.HostName);
+    metadata_run_info->SetStringField("OS", data.MetaData.RunInfo.OSVersion);
+
+    metadata->SetObjectField("RUN_info", metadata_run_info);
+
+    JsonObject->SetObjectField("Metadata", metadata);
+
+    TArray<TSharedPtr<FJsonValue>> Sequences;
+    for (auto sequence : data.Sequences) 
+    {
+        TSharedPtr<FJsonObject> sequenceObj = MakeShareable(new FJsonObject);
+
+        sequenceObj->SetBoolField("IsFusion", sequence.IsFusion);
+
+        TSharedPtr<FJsonObject> parametersObj = MakeShareable(new FJsonObject);
+        TSharedPtr<FJsonObject> zedParametersObj = MakeShareable(new FJsonObject);
+
+        TSharedPtr<FJsonObject> bodyTrackingParametersObj = MakeShareable(new FJsonObject);
+        TSharedPtr<FJsonObject> depthParametersObj = MakeShareable(new FJsonObject);
+    
+        bodyTrackingParametersObj->SetStringField("body_format", EnumToString(sequence.Parameters.ZEDParameters.BodyTrackingParameters.BodyFormat));
+        bodyTrackingParametersObj->SetNumberField("detection_confidence_threshold", sequence.Parameters.ZEDParameters.BodyTrackingRuntimeParameters.DetectionConfidenceThreshold);
+        bodyTrackingParametersObj->SetStringField("detection_model", EnumToString(sequence.Parameters.ZEDParameters.BodyTrackingParameters.DetectionModel));
+        bodyTrackingParametersObj->SetBoolField("enable_body_fitting", sequence.Parameters.ZEDParameters.BodyTrackingParameters.bEnableBodyFitting);
+        bodyTrackingParametersObj->SetBoolField("enable_tracking", sequence.Parameters.ZEDParameters.BodyTrackingParameters.bEnableTracking);
+
+        zedParametersObj->SetObjectField("BodyTrackingParameters", bodyTrackingParametersObj);
+
+        depthParametersObj->SetStringField("depth_mode", EnumToString(sequence.Parameters.ZEDParameters.DepthParameters.DepthMode));
+        zedParametersObj->SetObjectField("DepthParameters", depthParametersObj);
+
+        parametersObj->SetObjectField("ZEDParameters", zedParametersObj);
+
+        sequenceObj->SetObjectField("Parameters", parametersObj);
+
+        TSharedPtr<FJsonObject> performanceResultsObj = MakeShareable(new FJsonObject);
+        TSharedPtr<FJsonObject> objectDetectionRuntimeObj = MakeShareable(new FJsonObject);
+
+        objectDetectionRuntimeObj->SetNumberField("RetrieveTime_MS", sequence.PerformanceResults.ObjectDetectionRunTime.RetrieveTime_MS);
+        objectDetectionRuntimeObj->SetNumberField("GrabTime_MS", sequence.PerformanceResults.ObjectDetectionRunTime.GrabTime_MS);
+        objectDetectionRuntimeObj->SetNumberField("AppFPS", sequence.PerformanceResults.ObjectDetectionRunTime.AppFPS);
+
+        performanceResultsObj->SetObjectField("ObjectDetectionRunTime", objectDetectionRuntimeObj);
+        sequenceObj->SetObjectField("PerformanceResults", performanceResultsObj);
+
+        TSharedRef<FJsonValueObject> sequenceValue = MakeShareable(new FJsonValueObject(sequenceObj));
+        Sequences.Add(sequenceValue);
+    }
+
+    JsonObject->SetArrayField("Sequences", Sequences);
+
     return OutputString;
 }
 
-/*void getMetaData() {
+FPerfJsonMetaData getMetaData() {
     int zed_major, zed_minor, zed_patch;
     getZEDSDKBuildVersion(zed_major, zed_minor, zed_patch);
 
-    metadata["Software"]["TEST_VERSION"] = std::to_string(TEST_MAJOR_VERSION * 100 + TEST_MINOR_VERSION * 10 + TEST_PATCH_VERSION);
-    metadata["Software"]["TEST_BRANCH"] = GIT_BRANCH;
-    metadata["Software"]["TEST_COMMIT"] = GIT_COMMIT_HASH;
-    metadata["Software"]["SDK_VERSION"] = std::to_string(zed_major * 100 + zed_minor * 10 + zed_patch);
-    metadata["Software"]["SDK_BUILD"] = std::string(ZED_SDK_BUILD_ID);
+    FPerfJsonMetaData metadata;
 
     // current date/time based on current system
     time_t now = time(0);
     std::string date(ctime(&now));
     if (date.back() == '\n') date.pop_back(); // remove EOL
-    metadata["RUN_info"]["Date"] = date;
-    metadata["RUN_info"]["UNIX Time"] = now;
-    metadata["RUN_info"]["HOST"] = getHostName();
-    metadata["RUN_info"]["OS"] = getOS();
-    metadata["RUN_info"]["CPU"] = getCPU();
+    metadata.RunInfo.Date = FString(date.c_str());
+    metadata.RunInfo.HostName = FString(getHostName().c_str());
+    metadata.RunInfo.OSVersion = FString(getOS().c_str());
+    metadata.RunInfo.CpuModel = FString(getCPU().c_str());
     auto GPU_infos = getGPU();
-    metadata["RUN_info"]["GPU"] = GPU_infos.first;
-    metadata["RUN_info"]["CUDA"] = GPU_infos.second;
-}*/
+    metadata.RunInfo.GpuModel = FString(GPU_infos.first.c_str());
+    metadata.RunInfo.CudaVersion = GPU_infos.second;
+
+    return metadata;
+}
 
 static std::string getCPU() {
     std::string cpuName = "";

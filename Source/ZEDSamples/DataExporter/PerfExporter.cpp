@@ -82,7 +82,7 @@ void APerfExporter::Init()
     CreateJSONFile(path);
 
     data = FPerfJsonData();
-    FPerfJsonMetaData meta;
+    
 
     UE_LOG(LogTemp, Warning, TEXT("Is Init"));
     is_init_ = true;
