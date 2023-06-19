@@ -83,13 +83,13 @@ void FAnimNode_ZEDPose::BuildPoseFromSlBodyData(FPoseContext& PoseContext)
             KeypointsMirrored = Keypoints38Mirrored;
             ParentsIdx = parents38Idx;
         }
-        else if (BodyData.Keypoint.Num() == Keypoints70.Num())
+        /*else if (BodyData.Keypoint.Num() == Keypoints70.Num())
         {
             NbKeypoints = 70;
             Keypoints = Keypoints70;
             KeypointsMirrored = Keypoints70Mirrored;
             ParentsIdx = parents70Idx;
-        }
+        }*/
         else
         {
             UE_LOG(LogTemp, Warning, TEXT("Incompatible body format, please use either body 34/38 or 70"));
@@ -110,21 +110,39 @@ void FAnimNode_ZEDPose::BuildPoseFromSlBodyData(FPoseContext& PoseContext)
     SkeletalMesh->GetBoneNames(TargetBoneNames);
 
     // Apply an offset to put the feet of the ground and offset "floating" avatars.
-    if (bStickAvatarOnFloor && BodyData.KeypointConfidence[*Keypoints.FindKey(FName("LEFT_ANKLE"))] > 90 && BodyData.KeypointConfidence[*Keypoints.FindKey(FName("RIGHT_ANKLE"))] > 90) { //if both foot are visible/detected
-        if (SkeletalMesh) {
-
+    if (bStickAvatarOnFloor && BodyData.KeypointConfidence[*Keypoints.FindKey(FName("LEFT_ANKLE"))] > 0 && BodyData.KeypointConfidence[*Keypoints.FindKey(FName("RIGHT_ANKLE"))] > 0) { //if both foot are visible/detected
+        if (SkeletalMesh) 
+        {
             FVector LeftFootPosition;
             FVector RightFootPosition;
             if (BodyData.Keypoint.Num() == 34) // body 34
             {
-                LeftFootPosition = SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[21]]);
-                RightFootPosition = SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[25]]);
+                if (LeftAnkleToHeelOffset == 0 && RightAnkleToHeelOffset == 0)
+                {
+                    LeftAnkleToHeelOffset = SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[21]]).Z - SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[20]]).Z;
+                    RightAnkleToHeelOffset = SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[25]]).Z - SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[24]]).Z;
+
+                }
+
+                LeftFootPosition = SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[20]]) + LeftAnkleToHeelOffset;
+                RightFootPosition = SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[24]]) + RightAnkleToHeelOffset;
+
             }
             else // body 38 or 70
             {
-                LeftFootPosition = SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[24]]);
-                RightFootPosition = SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[25]]);
+                if (LeftAnkleToHeelOffset == 0 && RightAnkleToHeelOffset == 0)
+                {
+                    LeftAnkleToHeelOffset = SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[24]]).Z - SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[22]]).Z;
+                    RightAnkleToHeelOffset = SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[25]]).Z - SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[23]]).Z;
+                    
+                    //UE_LOG(LogTemp, Warning, TEXT("Recomputing foot position ... %f"), LeftAnkleToHeelOffset);
+
+                }
+
+                LeftFootPosition = SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[22]]) + LeftAnkleToHeelOffset;
+                RightFootPosition = SkeletalMesh->GetBoneLocation(RemapAsset[Keypoints[23]]) + RightAnkleToHeelOffset;
             }
+
 
             // Shot raycast to the ground.
             FHitResult HitLeftFoot;
@@ -142,41 +160,33 @@ void FAnimNode_ZEDPose::BuildPoseFromSlBodyData(FPoseContext& PoseContext)
             // Compute the distance between one foot and the ground (the first static object found by the ray cast).
             if (RaycastLeftFoot)
             {
-                LeftFootFloorDistance = (LeftFootPosition + FVector(0, 0, FeetOffset) - HitLeftFoot.ImpactPoint).Z;
+                LeftFootFloorDistance = (LeftFootPosition + FVector(0, 0, AutomaticHeightOffset) - HitLeftFoot.ImpactPoint).Z;
             }
 
             if (RaycastRightFoot)
             {
-                RightFootFloorDistance = (RightFootPosition + FVector(0, 0, FeetOffset) - HitRightFoot.ImpactPoint).Z;
+                RightFootFloorDistance = (RightFootPosition + FVector(0, 0, AutomaticHeightOffset) - HitRightFoot.ImpactPoint).Z;
             }
 
-            float MinFootFloorDistance = 0;
-
-            // If both feet are under the ground, use the max value instead of the min value.
-            if (RightFootFloorDistance < 0 && LeftFootFloorDistance < 0) 
+            //UE_LOG(LogTemp, Warning, TEXT("%f"), abs(fminf(LeftFootFloorDistance, RightFootFloorDistance)));
+            if (abs(fminf(LeftFootFloorDistance, RightFootFloorDistance)) <= DistanceToFloorThreshold)
             {
-                MinFootFloorDistance = -1.0f * fmax(abs(RightFootFloorDistance), abs(LeftFootFloorDistance));
-
-                FeetOffset = FeetOffsetAlpha * MinFootFloorDistance + (1 - FeetOffsetAlpha) * FeetOffset;
-            }
-            else if (RightFootFloorDistance > 0 && LeftFootFloorDistance > 0)
-            {
-                MinFootFloorDistance = fmin(abs(RightFootFloorDistance), abs(LeftFootFloorDistance));
-
-                // The feet offset is added in the buffer of size "FeetOffsetBufferSize". If the buffer is already full, remove the oldest value (the first of the deque)
-                if (FeetOffsetBuffer.size() == FeetOffsetBufferSize)
-                {
-                    FeetOffsetBuffer.pop_front();
-                }
-                FeetOffsetBuffer.push_back(MinFootFloorDistance);
-
-                // The feet offset is the min element of this deque (of size FeetOffsetBufferSize).
-                FeetOffset = *std::min_element(FeetOffsetBuffer.begin(), FeetOffsetBuffer.end());
+                // Reset counter 
+                DurationOffsetError = 0;
             }
             else
             {
-                MinFootFloorDistance = fmin(RightFootFloorDistance, LeftFootFloorDistance);
-                FeetOffset = FeetOffsetAlpha * MinFootFloorDistance + (1 - FeetOffsetAlpha) * FeetOffset;
+                auto NowTS_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                DurationOffsetError += (NowTS_ms - PreviousTS_ms) / 1000.0f;
+                PreviousTS_ms = NowTS_ms;
+                
+                if (DurationOffsetError > DurationOffsetErrorThreshold)
+                {
+                    AutomaticHeightOffset = fmin(LeftFootFloorDistance, RightFootFloorDistance);
+                    DurationOffsetError = 0;
+
+                    //UE_LOG(LogTemp, Warning, TEXT("Recomputing offset ... %f"), AutomaticHeightOffset);
+                }
             }
         }
     }
@@ -222,8 +232,8 @@ void FAnimNode_ZEDPose::BuildPoseFromSlBodyData(FPoseContext& PoseContext)
             if (TargetBoneName == *RemapAsset.Find(GetTargetRootName()))
             {
                 FVector RootPosition = BodyData.Keypoint[0];
-                RootPosition.Z += HeightOffset;
-                RootPosition.Z -= FeetOffset;
+                RootPosition.Z += ManualHeightOffset;
+                RootPosition.Z -= AutomaticHeightOffset;
 
                 Translation = FMath::Lerp(
                     PreviousRootPosition,
@@ -299,7 +309,6 @@ void FAnimNode_ZEDPose::BuildPoseFromSlBodyData(FPoseContext& PoseContext)
                         ParentBoneScale = *ZEDBoneSize.Find(TargetParentBoneName) / *RefPoseBoneSize.Find(TargetParentBoneName);
                         BoneScale /= ParentBoneScale;
 
-
                         FinalScale = BoneScaleAlpha * (*BonesScale.Find(TargetBoneName)) + (1 - BoneScaleAlpha) * FVector(BoneScale, BoneScale, BoneScale);
                     }
                     else
@@ -336,6 +345,12 @@ void FAnimNode_ZEDPose::Initialize_AnyThread(const FAnimationInitializeContext& 
 	InputPose.Initialize(Context);
 
     BoneScaleAlpha = 0.2f;
+    PreviousTS_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+    if (bStickAvatarOnFloor)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Automatic offset of avatar and Foot IK can not be enabled together. FootIK will be ignored"));
+    }
 }
 
 void FAnimNode_ZEDPose::PreUpdate(const UAnimInstance* InAnimInstance)

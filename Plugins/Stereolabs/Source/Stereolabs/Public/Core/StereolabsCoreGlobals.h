@@ -1829,10 +1829,10 @@ namespace sl
 			{
 				NbKP = 38;
 			}
-			else if (BodyFormat == ESlBodyFormat::BF_BODY_70)
+			/*else if (BodyFormat == ESlBodyFormat::BF_BODY_70)
 			{
 				NbKP = 70;
-			}
+			}*/
 
 			for (int i = 0; i < NbKP; i++)
 			{
@@ -2206,6 +2206,7 @@ namespace sl
 			struct SL_BodyTrackingRuntimeParameters BTParameters;
 			BTParameters.detection_confidence_threshold = UnrealData.DetectionConfidenceThreshold;
 			BTParameters.minimum_keypoints_threshold = UnrealData.MinimumKeypointsThreshold;
+			BTParameters.skeleton_smoothing = UnrealData.SkeletonSmoothing;
 
 			return BTParameters;
 		}
@@ -2280,6 +2281,7 @@ namespace sl
 			SpatialMappingParameters.resolution_meter = GetResolution(UnrealData.PresetResolution);
 			SpatialMappingParameters.use_chunk_only = UnrealData.GetUseChunksOnly();
 			SpatialMappingParameters.reverse_vertex_order = true;
+			SpatialMappingParameters.stability_counter = UnrealData.StabilityCounter;
 
 			return SpatialMappingParameters;
 		}
@@ -2398,14 +2400,14 @@ namespace sl
 				case SL_BODY_TRACKING_MODEL_HUMAN_BODY_FAST:          m_out = SL_AI_MODELS_HUMAN_BODY_38_FAST_DETECTION; break;
 				}
 			}
-			else if (body_format == SL_BODY_FORMAT_BODY_70)
+			/*else if (body_format == SL_BODY_FORMAT_BODY_70)
 			{
 				switch (m_in) {
 				case SL_BODY_TRACKING_MODEL_HUMAN_BODY_ACCURATE:      m_out = SL_AI_MODELS_HUMAN_BODY_70_ACCURATE_DETECTION; break;
 				case SL_BODY_TRACKING_MODEL_HUMAN_BODY_MEDIUM:        m_out = SL_AI_MODELS_HUMAN_BODY_70_MEDIUM_DETECTION; break;
 				case SL_BODY_TRACKING_MODEL_HUMAN_BODY_FAST:          m_out = SL_AI_MODELS_HUMAN_BODY_70_FAST_DETECTION; break;
 				}
-			}
+			}*/
 			else
 			{
 				switch (m_in) {
