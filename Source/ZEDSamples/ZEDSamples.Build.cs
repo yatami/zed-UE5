@@ -9,6 +9,7 @@ public class ZEDSamples : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         bEnableUndefinedIdentifierWarnings = false;
 
+
         PublicDependencyModuleNames.AddRange(new string[] {
 			"Core",
 			"CoreUObject",

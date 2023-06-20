@@ -54,34 +54,22 @@ void ASKExporter::CloseFile()
 
 void ASKExporter::CreateJSONFile(const std::string& file_path)
 {
-    try {
-        CloseFile();
+    CloseFile();
 
-        IPlatformFile& platform_file = FPlatformFileManager::Get().GetPlatformFile();
-        log_file_handle_ = platform_file.OpenWrite(*FString(file_path.c_str()));
-
-    }
-    catch (std::exception& ex) {
-        UE_LOG(LogTemp, Error, TEXT("Can not create json file %s"), ex.what());
-    }
+    IPlatformFile& platform_file = FPlatformFileManager::Get().GetPlatformFile();
+    log_file_handle_ = platform_file.OpenWrite(*FString(file_path.c_str()));
 }
 
 void ASKExporter::WriteString(const std::string& str) const
 {
-    try 
+    if (log_file_handle_) 
     {
-        if (log_file_handle_) 
-        {
-            FString line_f(str.c_str());
-            log_file_handle_->Write((const uint8*)TCHAR_TO_ANSI(*line_f), line_f.Len());
-        }
-        else
-            UE_LOG(LogTemp, Error, TEXT("Attempt to write to recording log file when file was not opened"));
+        FString line_f(str.c_str());
+        log_file_handle_->Write((const uint8*)TCHAR_TO_ANSI(*line_f), line_f.Len());
     }
-    catch (std::exception& ex) 
-    {
-        UE_LOG(LogTemp, Error, TEXT("write to recording file failed %s"), ex.what());
-    }
+    else
+        UE_LOG(LogTemp, Error, TEXT("Attempt to write to recording log file when file was not opened"));
+
 }
 
 

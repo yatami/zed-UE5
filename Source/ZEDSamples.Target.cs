@@ -9,7 +9,8 @@ public class ZEDSamplesTarget : TargetRules
 	{
 		Type = TargetType.Game;
 
-		ExtraModuleNames.AddRange( new string[] { "ZEDSamples" } );
+
+        ExtraModuleNames.AddRange( new string[] { "ZEDSamples" } );
 
 		if (bBuildEditor)
 		{
